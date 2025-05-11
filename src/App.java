@@ -7,6 +7,5 @@ public class App {
         final int N = 4;
         NQueensUnitFactory unitFactory = new NQueensUnitFactory(N);
         var a = Ag.execute(N_POPULATION, N_ELITE, unitFactory, N_GENERATION, false);
-
     }
 }

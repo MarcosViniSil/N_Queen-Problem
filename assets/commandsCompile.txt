@@ -1,0 +1,4 @@
+
+gerar .class -> javac NOME_AQUIVO_PRINCIPAL.java
+
+executar -> java NOME_ARQUIVO_PRINCIPAL
