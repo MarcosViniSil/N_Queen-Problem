@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class NQueensUnit implements Unit {
@@ -15,8 +16,8 @@ public class NQueensUnit implements Unit {
     }
 
     @Override
-    public ArrayList<Unit> crossover(Unit unit) {
-
+    public List<Unit> crossover(Unit unit) {
+            
         NQueensUnit parent2 = (NQueensUnit) unit;
 
         int crossoverPoint1 = this.generateRandomValue(this.n);
@@ -50,14 +51,14 @@ public class NQueensUnit implements Unit {
 
         for (int i = 0; i < this.n; i++) {
             if (random.nextDouble() < PROBABILITY) {
-                mutatedGenes[i] = this.generateRandomValues(this.n);
+                mutatedGenes[i] = this.generateRandomValue(this.n);
                 atLeastOneMutation = true;
             }
         }
 
         if (!atLeastOneMutation) {
             int randomIndex = random.nextInt(this.n);
-            mutatedGenes[randomIndex] = this.generateRandomValues(this.n);
+            mutatedGenes[randomIndex] = this.generateRandomValue(this.n);
         }
 
         NQueensUnit mutant = new NQueensUnit(this.n);
@@ -96,7 +97,7 @@ public class NQueensUnit implements Unit {
 
     public int getLineCollisions() {
         int collisions = 0;
-        int[] line = new int[2 * this.n - 1];
+        int[] line = new int[this.n];
 
         for (int i = 0; i < this.n; i++) {
             int row = this.genes[i];
@@ -107,8 +108,8 @@ public class NQueensUnit implements Unit {
         return collisions;
     }
 
-    public ArrayList<Unit> createOffspring(int[] child1Genes, int[] child2Genes) {
-        ArrayList<Unit> offspring = new ArrayList<>();
+    public List<Unit> createOffspring(int[] child1Genes, int[] child2Genes) {
+        List<Unit> offspring = new ArrayList<>();
 
         NQueensUnit child1 = new NQueensUnit(this.n);
         NQueensUnit child2 = new NQueensUnit(this.n);

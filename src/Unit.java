@@ -1,8 +1,8 @@
-import java.util.ArrayList;
+import java.util.List;
 
 public interface Unit {
     
-    public ArrayList<Unit> crossover(Unit unit);
+    public List<Unit> crossover(Unit unit);
 
     public Unit mutate();
 
