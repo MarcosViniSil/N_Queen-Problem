@@ -4,21 +4,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NQueensUnit implements Unit {
+public class NQueensIndividual implements Individual  {
 
     private int genes[];
     private int n;
 
-    public NQueensUnit(int n) {
+    public NQueensIndividual(int n) {
         this.n = n;
         this.genes = new int[this.n];
-        this.fillGenesWithRandomValues();
+        this.createPopulation();
     }
 
     @Override
-    public List<Unit> crossover(Unit unit) {
+    public List<Individual > crossover(Individual individual) {
             
-        NQueensUnit parent2 = (NQueensUnit) unit;
+        NQueensIndividual parent2 = (NQueensIndividual) individual;
 
         int crossoverPoint1 = this.generateRandomValue(this.n);
         int crossoverPoint2 = this.generateRandomValue(this.n);
@@ -41,7 +41,7 @@ public class NQueensUnit implements Unit {
     }
 
     @Override
-    public Unit mutate() {
+    public Individual mutate() {
         final double PROBABILITY = 0.2;
 
         Random random = new Random();
@@ -61,7 +61,7 @@ public class NQueensUnit implements Unit {
             mutatedGenes[randomIndex] = this.generateRandomValue(this.n);
         }
 
-        NQueensUnit mutant = new NQueensUnit(this.n);
+        NQueensIndividual mutant = new NQueensIndividual (this.n);
         mutant.setGenes(mutatedGenes);
 
         return mutant;
@@ -108,11 +108,11 @@ public class NQueensUnit implements Unit {
         return collisions;
     }
 
-    public List<Unit> createOffspring(int[] child1Genes, int[] child2Genes) {
-        List<Unit> offspring = new ArrayList<>();
+    public List<Individual> createOffspring(int[] child1Genes, int[] child2Genes) {
+        List<Individual > offspring = new ArrayList<>();
 
-        NQueensUnit child1 = new NQueensUnit(this.n);
-        NQueensUnit child2 = new NQueensUnit(this.n);
+        NQueensIndividual child1 = new NQueensIndividual(this.n);
+        NQueensIndividual child2 = new NQueensIndividual(this.n);
 
         child1.setGenes(child1Genes);
         child2.setGenes(child2Genes);
@@ -123,7 +123,7 @@ public class NQueensUnit implements Unit {
         return offspring;
     }
 
-    public void fillGenesWithRandomValues() {
+    public void createPopulation() {
         for (int i = 0; i < this.n; i++) {
             this.genes[i] = this.generateRandomValue(this.n);
         }
