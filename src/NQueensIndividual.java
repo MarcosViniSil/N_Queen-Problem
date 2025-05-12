@@ -61,7 +61,7 @@ public class NQueensIndividual implements Individual  {
             mutatedGenes[randomIndex] = this.generateRandomValue(this.n);
         }
 
-        NQueensIndividual mutant = new NQueensIndividual (this.n);
+        NQueensIndividual mutant = new NQueensIndividual(this.n);
         mutant.setGenes(mutatedGenes);
 
         return mutant;

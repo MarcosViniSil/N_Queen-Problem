@@ -10,6 +10,12 @@ public class GeneticAlgorithm {
     private NQueensIndividualFactory nQueens;
     private int nGeneration;
     private boolean isMin;
+    private List<Individual> offspring;
+    private List<Individual> mutants;
+    private List<Individual> join;
+    private List<Individual> newPopulation;
+    private List<Individual> initialPopulation;
+    private Random random;
 
     public GeneticAlgorithm(int nPopulation, int nElite, NQueensIndividualFactory nQueens, int nGeneration,
             boolean isMin) {
@@ -19,74 +25,75 @@ public class GeneticAlgorithm {
         this.nGeneration = nGeneration;
         this.isMin = isMin;
 
+        this.offspring = new ArrayList<>();
+        this.mutants = new ArrayList<>(this.nPopulation);
+        this.join = new ArrayList<>(this.nPopulation * 3);
+        this.initialPopulation = new ArrayList<>(this.nPopulation);
+        this.newPopulation = new ArrayList<>();
+
+        this.random = new Random();
+
     }
 
     public Individual execute() {
-        List<Individual> initialPopulation = this.createInitialPopulation();
+        this.createInitialPopulation();
 
         for (int i = 0; i < this.nGeneration; i++) {
-            Random random = new Random();
 
-            for (Individual Individual : initialPopulation) {
-                NQueensIndividual actualQueens = (NQueensIndividual) Individual;
-                System.out.println("Geração " + i + " encaixe: "+actualQueens.getFitness());
-                this.printQueens(actualQueens);
-            }
-            
-            var individualCandidate = this.sortPopulationBasedOnFitness(initialPopulation).get(0);
-            if (individualCandidate != null && individualCandidate instanceof NQueensIndividual) {
-                NQueensIndividual queen = (NQueensIndividual) individualCandidate;
-                if (queen.getFitness() == 0) {
-                    System.out.println("Solução encontrada na geração " + i);
-                    this.printQueens(queen);
-                    return queen;
-                }
-            }
-            List<Individual> offspring = this.createOffspring(initialPopulation);
+            this.printDatasGeneration(i);
 
-            List<Individual> mutants = this.createMutants(initialPopulation);
-
-            List<Individual> join = this.makeJoin(initialPopulation, offspring, mutants);
-
-            List<Individual> newPopulation = new ArrayList<>();
-
-            for (int k = 0; k < nElite; k++) {
-                newPopulation.add(join.remove(k));
+            if (this.isSolutionFound()) {
+                return this.printSolution(i);
             }
 
-            int remainPopulation = this.nPopulation - this.nElite;
-            remainPopulation = Math.min(remainPopulation, join.size());
-            int sumFitness = 0;
-            for (Individual Individual : join) {
-                sumFitness += Individual.getFitness();
-            }
+            this.createOffspring();
+            this.createMutants();
 
-            for (int r = 0; r < remainPopulation; r++) {
-                int spin = random.nextInt(sumFitness);
-                int cumulativeSum = 0;
+            this.makeJoin();
 
-                Iterator<Individual> iterator = join.iterator();
-                while (iterator.hasNext()) {
-                    Individual Individual = iterator.next();
-                    cumulativeSum += Individual.getFitness();
+            this.insertEliteIntoNewPopulation();
+            this.rouletteWheelSelection();
 
-                    if (spin < cumulativeSum) {
-                        newPopulation.add(Individual);
-                        sumFitness -= Individual.getFitness();
-                        iterator.remove();
-                        break;
-                    }
-                }
-            }
-
-            initialPopulation = newPopulation;
+            this.updatePopulation();
 
         }
+        System.out.println("Solução não foi encontrada com " + this.nGeneration + " gerações");
         return null;
     }
 
+    public boolean isSolutionFound() {
+        var individualCandidate = this.sortPopulationBasedOnFitness(this.initialPopulation).get(0);
+        if (individualCandidate != null && individualCandidate instanceof NQueensIndividual) {
+            NQueensIndividual queen = (NQueensIndividual) individualCandidate;
+            if (queen.getFitness() == 0) {
+                return true;
+            }
+
+        }
+        return false;
+    }
+
+    public Individual getSolution() {
+        return this.sortPopulationBasedOnFitness(this.initialPopulation).get(0);
+    }
+
+    public Individual printSolution(int generation){
+        Individual solution = this.getSolution();
+        System.out.println("Solução encontrada na geração "+generation);
+        this.printQueens((NQueensIndividual) solution);
+        return solution;
+    }
+
+    public void printDatasGeneration(int generation) {
+        for (Individual Individual : this.initialPopulation) {
+            NQueensIndividual actualQueens = (NQueensIndividual) Individual;
+            System.out.println("Geração " + generation + " encaixe: " + actualQueens.getFitness());
+            this.printQueens(actualQueens);
+        }
+    }
+
     public void printQueens(NQueensIndividual queen) {
-        NQueensIndividual actualQueen = (NQueensIndividual) bestQueen;
+        NQueensIndividual actualQueen = (NQueensIndividual) queen;
         int[] genes = actualQueen.getGenes();
         System.out.print("Posição das rainhas: ");
         for (int gene : genes) {
@@ -97,27 +104,63 @@ public class GeneticAlgorithm {
 
     }
 
-    public List<Individual> createInitialPopulation() {
-        List<Individual> initialPopulation = new ArrayList<>(this.nPopulation);
-
-        for (int i = 0; i < nPopulation; i++) {
-            initialPopulation.add(this.nQueens.getInstance());
-        }
-
-        return initialPopulation;
+    public int getRemainPopulation() {
+        int remainPopulation = this.nPopulation - this.nElite;
+        remainPopulation = Math.min(remainPopulation, join.size());
+        return remainPopulation;
     }
 
-    public List<Individual> makeJoin(List<Individual> initialPopulation, List<Individual> offspring,
-            List<Individual> mutants) {
+    public void rouletteWheelSelection() {
+        int remainPopulation = this.getRemainPopulation();
+        int sumFitness = this.getSumFitness();
 
-        List<Individual> join = new ArrayList<>(nPopulation * 3);
-        join.addAll(initialPopulation);
-        join.addAll(offspring);
-        join.addAll(mutants);
+        for (int r = 0; r < remainPopulation; r++) {
+            int spin = this.random.nextInt(sumFitness);
+            int cumulativeSum = 0;
+
+            Iterator<Individual> iterator = join.iterator();
+            while (iterator.hasNext()) {
+                Individual Individual = iterator.next();
+                cumulativeSum += Individual.getFitness();
+
+                if (spin < cumulativeSum) {
+                    this.newPopulation.add(Individual);
+                    sumFitness -= Individual.getFitness();
+                    iterator.remove();
+                    break;
+                }
+            }
+        }
+    }
+
+    public int getSumFitness() {
+        int sumFitness = 0;
+        for (Individual Individual : this.join) {
+            sumFitness += Individual.getFitness();
+        }
+
+        return sumFitness;
+    }
+
+    public void insertEliteIntoNewPopulation() {
+        for (int k = 0; k < nElite; k++) {
+            this.newPopulation.add(join.remove(k));
+        }
+    }
+
+    public void createInitialPopulation() {
+        for (int i = 0; i < this.nPopulation; i++) {
+            this.initialPopulation.add(this.nQueens.getInstance());
+        }
+    }
+
+    public void makeJoin() {
+
+        this.join.addAll(this.initialPopulation);
+        this.join.addAll(this.offspring);
+        this.join.addAll(this.mutants);
 
         join = this.sortPopulationBasedOnFitness(join);
-
-        return join;
     }
 
     public List<Individual> sortPopulationBasedOnFitness(List<Individual> join) {
@@ -134,8 +177,10 @@ public class GeneticAlgorithm {
         return join;
     }
 
-    public List<Individual> createOffspring(List<Individual> initialPopulation) {
-        List<Individual> initialPopulationAux = this.generateAuxPopulation(initialPopulation);
+    public List<Individual> createOffspring() {
+        List<Individual> initialPopulationAux = this.generateAuxPopulation();
+
+        this.offspring.clear();
 
         List<Individual> offspring = new ArrayList<>();
 
@@ -155,25 +200,32 @@ public class GeneticAlgorithm {
         return offspring;
     }
 
-    public List<Individual> createMutants(List<Individual> initialPopulation) {
-        List<Individual> mutants = new ArrayList<>(this.nPopulation);
+    public void createMutants() {
+        this.mutants.clear();
 
         for (Individual Individual : initialPopulation) {
-            mutants.add(Individual.mutate());
+            this.mutants.add(Individual.mutate());
         }
-
-        return mutants;
     }
 
     public int generateRandomValueBetween(int max) {
-        Random random = new Random();
-        return random.nextInt(max);
+        return this.random.nextInt(max);
     }
 
-    public List<Individual> generateAuxPopulation(List<Individual> initialPopulation) {
+    public List<Individual> generateAuxPopulation() {
         List<Individual> initialPopulationAux = new ArrayList<>(this.nPopulation);
-        initialPopulationAux.addAll(initialPopulation);
+        initialPopulationAux.addAll(this.initialPopulation);
 
         return initialPopulationAux;
+    }
+
+    public void updatePopulation() {
+        this.initialPopulation.clear();
+        this.initialPopulation.addAll(this.newPopulation);
+
+        this.newPopulation.clear();
+        this.mutants.clear();
+        this.offspring.clear();
+        this.join.clear();
     }
 }
