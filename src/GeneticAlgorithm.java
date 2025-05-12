@@ -40,7 +40,7 @@ public class GeneticAlgorithm {
 
         for (int i = 0; i < this.nGeneration; i++) {
 
-            this.printDatasGeneration(i);
+            this.printBestDatasGeneration(i);
 
             if (this.isSolutionFound()) {
                 return this.printSolution(i);
@@ -79,27 +79,27 @@ public class GeneticAlgorithm {
 
     public Individual printSolution(int generation){
         Individual solution = this.getSolution();
-        System.out.println("Solução encontrada na geração "+generation);
+        System.out.print("Solução encontrada na geração "+generation+".");
         this.printQueens((NQueensIndividual) solution);
         return solution;
     }
 
-    public void printDatasGeneration(int generation) {
-        for (Individual Individual : this.initialPopulation) {
-            NQueensIndividual actualQueens = (NQueensIndividual) Individual;
-            System.out.println("Geração " + generation + " encaixe: " + actualQueens.getFitness());
-            this.printQueens(actualQueens);
+    public void printBestDatasGeneration(int generation) {
+        var individualCandidate = this.sortPopulationBasedOnFitness(this.initialPopulation).get(0);
+        if (individualCandidate != null && individualCandidate instanceof NQueensIndividual) {
+            NQueensIndividual queen = (NQueensIndividual) individualCandidate;
+            System.out.print("Geração " + generation + " encaixe: " + queen.getFitness()+".");
+            this.printQueens(queen);
         }
     }
 
     public void printQueens(NQueensIndividual queen) {
         NQueensIndividual actualQueen = (NQueensIndividual) queen;
         int[] genes = actualQueen.getGenes();
-        System.out.print("Posição das rainhas: ");
+        System.out.print(" Posição das rainhas: ");
         for (int gene : genes) {
             System.out.print(gene + " ");
         }
-        System.out.println();
         System.out.println();
 
     }
