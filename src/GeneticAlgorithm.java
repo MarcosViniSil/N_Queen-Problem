@@ -7,7 +7,7 @@ public class GeneticAlgorithm {
 
     private int nPopulation;
     private int nElite;
-    private NQueensIndividualFactory nQueens;
+    private StyblinskiTangIndividualFactory nQueens;
     private int nGeneration;
     private boolean isMin;
     private List<Individual> offspring;
@@ -17,7 +17,7 @@ public class GeneticAlgorithm {
     private List<Individual> initialPopulation;
     private Random random;
 
-    public GeneticAlgorithm(int nPopulation, int nElite, NQueensIndividualFactory nQueens, int nGeneration,
+    public GeneticAlgorithm(int nPopulation, int nElite, StyblinskiTangIndividualFactory nQueens, int nGeneration,
             boolean isMin) {
         this.nPopulation = nPopulation;
         this.nElite = nElite;
