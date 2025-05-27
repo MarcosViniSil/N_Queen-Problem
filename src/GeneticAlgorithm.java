@@ -63,8 +63,8 @@ public class GeneticAlgorithm {
 
     public boolean isSolutionFound() {
         var individualCandidate = this.sortPopulationBasedOnFitness(this.initialPopulation).get(0);
-        if (individualCandidate != null && individualCandidate instanceof NQueensIndividual) {
-            NQueensIndividual queen = (NQueensIndividual) individualCandidate;
+        if (individualCandidate != null && individualCandidate instanceof StyblinskiTangIndividual) {
+            StyblinskiTangIndividual queen = (StyblinskiTangIndividual) individualCandidate;
             if (queen.getFitness() == 0) {
                 return true;
             }
@@ -80,24 +80,24 @@ public class GeneticAlgorithm {
     public Individual printSolution(int generation){
         Individual solution = this.getSolution();
         System.out.print("Solução encontrada na geração "+generation+".");
-        this.printQueens((NQueensIndividual) solution);
+        this.printQueens((StyblinskiTangIndividual) solution);
         return solution;
     }
 
     public void printBestDatasGeneration(int generation) {
         var individualCandidate = this.sortPopulationBasedOnFitness(this.initialPopulation).get(0);
-        if (individualCandidate != null && individualCandidate instanceof NQueensIndividual) {
-            NQueensIndividual queen = (NQueensIndividual) individualCandidate;
+        if (individualCandidate != null && individualCandidate instanceof StyblinskiTangIndividual) {
+            StyblinskiTangIndividual queen = (StyblinskiTangIndividual) individualCandidate;
             System.out.print("Geração " + generation + " encaixe: " + queen.getFitness()+".");
             this.printQueens(queen);
         }
     }
 
-    public void printQueens(NQueensIndividual queen) {
-        NQueensIndividual actualQueen = (NQueensIndividual) queen;
-        int[] genes = actualQueen.getGenes();
-        System.out.print(" Posição das rainhas: ");
-        for (int gene : genes) {
+    public void printQueens(StyblinskiTangIndividual queen) {
+        StyblinskiTangIndividual actualQueen = (StyblinskiTangIndividual) queen;
+        double[] genes = actualQueen.getGenes();
+        System.out.print(" Posição: ");
+        for (double gene : genes) {
             System.out.print(gene + " ");
         }
         System.out.println();

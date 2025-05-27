@@ -1,9 +1,11 @@
 import java.util.List;
+import java.util.Random;
+import java.util.ArrayList;
 
-public class StyblinskiTangIndividual implements Individual{
+public class StyblinskiTangIndividual implements Individual {
 
-    private int genes[];
-    private int n;
+    private double genes[];
+    private int dimension;
     private final double LOWER_BOUND = -5.0;
     private final double UPPER_BOUND = 5.0;
     private final double ALPHA = 0.3;
@@ -51,28 +53,29 @@ public class StyblinskiTangIndividual implements Individual{
 
     @Override
     public Individual mutate() {
-        final double MUTATION_RATE = 0.2;       
-        final double MUTATION_STDDEV = 0.1;      
+        final double MUTATION_RATE = 0.2;
+        final double MUTATION_STDDEV = 0.1;
 
         Random rand = new Random();
         double[] mutatedGenes = genes.clone();
 
         for (int i = 0; i < dimension; i++) {
             if (rand.nextDouble() < MUTATION_RATE) {
-            double noise = rand.nextGaussian() * MUTATION_STDDEV;
-            mutatedGenes[i] += noise;
-            mutatedGenes[i] = Math.max(LOWER_BOUND, Math.min(UPPER_BOUND, mutatedGenes[i]));
+                double noise = rand.nextGaussian() * MUTATION_STDDEV;
+                mutatedGenes[i] += noise;
+                mutatedGenes[i] = Math.max(LOWER_BOUND, Math.min(UPPER_BOUND, mutatedGenes[i]));
+            }
         }
-    }
 
-    StyblinskiTangIndividual mutant = new StyblinskiTangIndividual(dimension);
-    mutant.setGenes(mutatedGenes);
-    return mutant;
-}
+        StyblinskiTangIndividual mutant = new StyblinskiTangIndividual(dimension);
+        mutant.setGenes(mutatedGenes);
+        return mutant;
+    }
 
     @Override
     public int getFitness() {
-        return (int) styblinskiTang(genes);
+        double rawFitness = styblinskiTang(genes);
+        return Math.abs((int) rawFitness);
     }
 
     public static double styblinskiTang(double[] x) {

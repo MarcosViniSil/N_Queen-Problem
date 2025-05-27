@@ -1,4 +1,4 @@
-public interface StyblinskiTangIndividualFactory implements IndividualFactory {
+public class StyblinskiTangIndividualFactory implements IndividualFactory {
     
     private int n;
 
