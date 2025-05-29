@@ -6,6 +6,6 @@ public interface Individual {
 
     public Individual mutate();
 
-    public int getFitness();
+    public double getFitness();
 
 }

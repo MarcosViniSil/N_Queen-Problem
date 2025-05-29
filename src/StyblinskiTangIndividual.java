@@ -53,8 +53,8 @@ public class StyblinskiTangIndividual implements Individual {
 
     @Override
     public Individual mutate() {
-        final double MUTATION_RATE = 0.2;
-        final double MUTATION_STDDEV = 0.1;
+    final double MUTATION_RATE = 0.2; 
+    final double MUTATION_STDDEV = 0.1 * (UPPER_BOUND - LOWER_BOUND); 
 
         Random rand = new Random();
         double[] mutatedGenes = genes.clone();
@@ -73,9 +73,8 @@ public class StyblinskiTangIndividual implements Individual {
     }
 
     @Override
-    public int getFitness() {
-        double rawFitness = styblinskiTang(genes);
-        return Math.abs((int) rawFitness);
+    public double getFitness() {
+        return StyblinskiTangIndividual.styblinskiTang(genes);
     }
 
     public static double styblinskiTang(double[] x) {

@@ -16,15 +16,16 @@ public class GeneticAlgorithm {
     private List<Individual> newPopulation;
     private List<Individual> initialPopulation;
     private Random random;
+    int dimension;
 
     public GeneticAlgorithm(int nPopulation, int nElite, StyblinskiTangIndividualFactory nQueens, int nGeneration,
-            boolean isMin) {
+            boolean isMin, int dimension) {
         this.nPopulation = nPopulation;
         this.nElite = nElite;
         this.nQueens = nQueens;
         this.nGeneration = nGeneration;
         this.isMin = isMin;
-
+        this.dimension = dimension;
         this.offspring = new ArrayList<>();
         this.mutants = new ArrayList<>(this.nPopulation);
         this.join = new ArrayList<>(this.nPopulation * 3);
@@ -52,7 +53,7 @@ public class GeneticAlgorithm {
             this.makeJoin();
 
             this.insertEliteIntoNewPopulation();
-            this.rouletteWheelSelection();
+            this.tournamentSelection();
 
             this.updatePopulation();
 
@@ -62,13 +63,12 @@ public class GeneticAlgorithm {
     }
 
     public boolean isSolutionFound() {
-        var individualCandidate = this.sortPopulationBasedOnFitness(this.initialPopulation).get(0);
-        if (individualCandidate != null && individualCandidate instanceof StyblinskiTangIndividual) {
-            StyblinskiTangIndividual queen = (StyblinskiTangIndividual) individualCandidate;
-            if (queen.getFitness() == 0) {
-                return true;
-            }
-
+        var best = this.sortPopulationBasedOnFitness(this.initialPopulation).get(0);
+        if (best instanceof StyblinskiTangIndividual) {
+            StyblinskiTangIndividual st = (StyblinskiTangIndividual) best;
+            double fitness = st.getFitness();
+            double expected = -39.16617 * dimension;
+            return fitness < expected + 0.1; 
         }
         return false;
     }
@@ -77,31 +77,35 @@ public class GeneticAlgorithm {
         return this.sortPopulationBasedOnFitness(this.initialPopulation).get(0);
     }
 
-    public Individual printSolution(int generation){
+    public Individual printSolution(int generation) {
         Individual solution = this.getSolution();
-        System.out.print("Solução encontrada na geração "+generation+".");
+        System.out.print("Solução encontrada na geração " + generation + ".");
         this.printQueens((StyblinskiTangIndividual) solution);
         return solution;
     }
 
     public void printBestDatasGeneration(int generation) {
+        if (this.initialPopulation.isEmpty()) {
+            return;
+        }
         var individualCandidate = this.sortPopulationBasedOnFitness(this.initialPopulation).get(0);
         if (individualCandidate != null && individualCandidate instanceof StyblinskiTangIndividual) {
-            StyblinskiTangIndividual queen = (StyblinskiTangIndividual) individualCandidate;
-            System.out.print("Geração " + generation + " encaixe: " + queen.getFitness()+".");
-            this.printQueens(queen);
+            StyblinskiTangIndividual st = (StyblinskiTangIndividual) individualCandidate;
+            System.out.print("Geração " + generation + " - Melhor Fitness: " + st.getFitness());
+            this.printQueens(st);
         }
     }
 
     public void printQueens(StyblinskiTangIndividual queen) {
-        StyblinskiTangIndividual actualQueen = (StyblinskiTangIndividual) queen;
-        double[] genes = actualQueen.getGenes();
-        System.out.print(" Posição: ");
-        for (double gene : genes) {
-            System.out.print(gene + " ");
-        }
         System.out.println();
-
+        double[] genes = queen.getGenes();
+        System.out.print(" Posição: [");
+        for (int i = 0; i < genes.length; i++) {
+            System.out.printf("%.3f", genes[i]);
+            if (i < genes.length - 1)
+                System.out.print(", ");
+        }
+        System.out.println("]");
     }
 
     public int getRemainPopulation() {
@@ -111,21 +115,22 @@ public class GeneticAlgorithm {
     }
 
     public void rouletteWheelSelection() {
+        this.join = this.sortPopulationBasedOnFitness(this.join);
+        double sumFitness = this.getSumFitness();
         int remainPopulation = this.getRemainPopulation();
-        int sumFitness = this.getSumFitness();
+        this.newPopulation.clear();
 
         for (int r = 0; r < remainPopulation; r++) {
-            int spin = this.random.nextInt(sumFitness);
-            int cumulativeSum = 0;
+            double spin = this.random.nextDouble() * sumFitness;
+            double cumulativeSum = 0;
 
-            Iterator<Individual> iterator = join.iterator();
+            Iterator<Individual> iterator = this.join.iterator();
             while (iterator.hasNext()) {
-                Individual Individual = iterator.next();
-                cumulativeSum += Individual.getFitness();
-
-                if (spin < cumulativeSum) {
-                    this.newPopulation.add(Individual);
-                    sumFitness -= Individual.getFitness();
+                Individual individual = iterator.next();
+                cumulativeSum += individual.getFitness();
+                if (spin <= cumulativeSum) {
+                    this.newPopulation.add(individual);
+                    sumFitness -= individual.getFitness();
                     iterator.remove();
                     break;
                 }
@@ -133,18 +138,43 @@ public class GeneticAlgorithm {
         }
     }
 
-    public int getSumFitness() {
-        int sumFitness = 0;
-        for (Individual Individual : this.join) {
-            sumFitness += Individual.getFitness();
-        }
+    public void tournamentSelection() {
+        int remainPopulation = this.getRemainPopulation();
+        this.newPopulation.clear();
 
+        for (int i = 0; i < remainPopulation; i++) {
+            List<Individual> tournament = new ArrayList<>();
+            for (int j = 0; j < 3; j++) {
+                int randomIndex = random.nextInt(join.size());
+                tournament.add(join.get(randomIndex));
+            }
+
+            tournament.sort((a, b) -> Double.compare(a.getFitness(), b.getFitness()));
+            this.newPopulation.add(tournament.get(0));
+        }
+    }
+
+    public double getSumFitness() {
+        double sumFitness = 0;
+        for (Individual individual : this.join) {
+            sumFitness += individual.getFitness();
+        }
         return sumFitness;
     }
 
     public void insertEliteIntoNewPopulation() {
-        for (int k = 0; k < nElite; k++) {
-            this.newPopulation.add(join.remove(k));
+        if (join.isEmpty())
+            return;
+
+        this.join = this.sortPopulationBasedOnFitness(this.join);
+        int eliteCount = Math.min(nElite, join.size());
+
+        for (int k = 0; k < eliteCount; k++) {
+            this.newPopulation.add(join.get(k));
+        }
+
+        for (int k = 0; k < eliteCount; k++) {
+            join.remove(0);
         }
     }
 
@@ -163,29 +193,20 @@ public class GeneticAlgorithm {
         join = this.sortPopulationBasedOnFitness(join);
     }
 
-    public List<Individual> sortPopulationBasedOnFitness(List<Individual> join) {
-        join.sort((a, b) -> {
-            if (a.getFitness() < b.getFitness()) {
-                return -1;
-            } else if (a.getFitness() > b.getFitness()) {
-                return 1;
-            } else {
-                return 0;
-            }
+    public List<Individual> sortPopulationBasedOnFitness(List<Individual> population) {
+        population.sort((a, b) -> {
+            double fitnessA = StyblinskiTangIndividual.styblinskiTang(((StyblinskiTangIndividual) a).getGenes());
+            double fitnessB = StyblinskiTangIndividual.styblinskiTang(((StyblinskiTangIndividual) b).getGenes());
+            return Double.compare(fitnessA, fitnessB);
         });
-
-        return join;
+        return population;
     }
 
-    public List<Individual> createOffspring() {
+    public void createOffspring() {
         List<Individual> initialPopulationAux = this.generateAuxPopulation();
-
         this.offspring.clear();
 
-        List<Individual> offspring = new ArrayList<>();
-
         while (initialPopulationAux.size() >= 2) {
-
             int indexParent1 = this.generateRandomValueBetween(initialPopulationAux.size());
             Individual parent1 = initialPopulationAux.remove(indexParent1);
 
@@ -193,11 +214,8 @@ public class GeneticAlgorithm {
             Individual parent2 = initialPopulationAux.remove(indexParent2);
 
             List<Individual> children = parent1.crossover(parent2);
-            offspring.addAll(children);
-
+            this.offspring.addAll(children);
         }
-
-        return offspring;
     }
 
     public void createMutants() {
@@ -221,6 +239,12 @@ public class GeneticAlgorithm {
 
     public void updatePopulation() {
         this.initialPopulation.clear();
+
+        if (!this.newPopulation.isEmpty()) {
+            this.initialPopulation.addAll(this.newPopulation);
+        } else {
+            this.createInitialPopulation();
+        }
         this.initialPopulation.addAll(this.newPopulation);
 
         this.newPopulation.clear();
