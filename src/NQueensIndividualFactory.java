@@ -11,4 +11,8 @@ public class NQueensIndividualFactory implements IndividualFactory {
         return new NQueensIndividual(n);
     }
 
+    public NQueensIndividual createIndividual(){
+        return NQueensIndividual;
+    }
+
 }

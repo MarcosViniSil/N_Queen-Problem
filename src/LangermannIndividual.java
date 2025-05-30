@@ -2,15 +2,28 @@ import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
 
-public class StyblinskiTangIndividual implements Individual {
+public class LangermannIndividual implements Individual {
 
     private double genes[];
     private int dimension;
-    private final double LOWER_BOUND = -5.0;
-    private final double UPPER_BOUND = 5.0;
+    private final double LOWER_BOUND = 0;
+    private final double UPPER_BOUND = 10.0;
     private final double ALPHA = 0.3;
+    private static final int M = 5;
+    private static final double[][] matrixA = {
+        {3, 5},
+        {5, 2},
+        {2, 1},
+        {1, 4},
+        {7, 9}
+    };
 
-    public StyblinskiTangIndividual(int dimension) {
+    private static final double[] vectorC = {1, 2, 5, 2, 3};
+
+    public LangermannIndividual(int dimension) {
+        if (dimension > 2) {
+            dimension = 2;
+        }
         this.dimension = dimension;
         this.genes = new double[dimension];
         this.randomizeGenes();
@@ -25,7 +38,7 @@ public class StyblinskiTangIndividual implements Individual {
 
     @Override
     public List<Individual> crossover(Individual other) {
-        StyblinskiTangIndividual parent2 = (StyblinskiTangIndividual) other;
+        LangermannIndividual parent2 = (LangermannIndividual) other;
         Random rand = new Random();
 
         double[] childGenes = new double[dimension];
@@ -43,7 +56,7 @@ public class StyblinskiTangIndividual implements Individual {
             childGenes[i] = Math.max(LOWER_BOUND, Math.min(UPPER_BOUND, lower + (upper - lower) * rand.nextDouble()));
         }
 
-        StyblinskiTangIndividual child = new StyblinskiTangIndividual(dimension);
+        LangermannIndividual child = new LangermannIndividual(dimension);
         child.setGenes(childGenes);
 
         List<Individual> offspring = new ArrayList<>();
@@ -53,8 +66,8 @@ public class StyblinskiTangIndividual implements Individual {
 
     @Override
     public Individual mutate() {
-    final double MUTATION_RATE = 0.2; 
-    final double MUTATION_STDDEV = 0.1 * (UPPER_BOUND - LOWER_BOUND); 
+        final double MUTATION_RATE = 0.2;
+        final double MUTATION_STDDEV = 0.1 * (UPPER_BOUND - LOWER_BOUND);
 
         Random rand = new Random();
         double[] mutatedGenes = genes.clone();
@@ -67,23 +80,27 @@ public class StyblinskiTangIndividual implements Individual {
             }
         }
 
-        StyblinskiTangIndividual mutant = new StyblinskiTangIndividual(dimension);
+        LangermannIndividual mutant = new LangermannIndividual(dimension);
         mutant.setGenes(mutatedGenes);
         return mutant;
     }
 
     @Override
     public double getFitness() {
-        return StyblinskiTangIndividual.styblinskiTang(genes);
+        double sum = 0.0;
+        for (int i = 0; i < M; i++) {
+            double sumSq = 0.0;
+            for (int j = 0; j <this.dimension; j++) {
+                double diff = this.genes[j] - matrixA[i][j];
+                sumSq += diff * diff;
+            }
+            double term = vectorC[i] * Math.exp(-sumSq / Math.PI) * Math.cos(Math.PI * sumSq);
+            sum += term;
+        }
+        return sum;
     }
 
-    public static double styblinskiTang(double[] x) {
-        double sum = 0.0;
-        for (double xi : x) {
-            sum += Math.pow(xi, 4) - 16 * Math.pow(xi, 2) + 5 * xi;
-        }
-        return 0.5 * sum;
-    }
+
     @Override
     public double[] getGenes() {
         return genes;

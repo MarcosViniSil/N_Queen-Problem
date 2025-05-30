@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class GeneticAlgorithm {
     public static Individual execute(int nPopulation, int nElite, IndividualFactory individualFactory, int nGeneration,
-            double targetFitness) {
+            double targetFitness, double tolerance) {
         List<Individual> initialPopulation = new ArrayList<>(nPopulation);
 
         for (int k = 0; k < nPopulation; k++) {
@@ -16,20 +16,17 @@ public class GeneticAlgorithm {
             final int generation = i;
 
             initialPopulation.stream().forEach(
-                    e -> {
+                    individual -> {
                         System.out.println();
                         System.out.print("Geração: " + generation + ". Valores: ");
-                        var individual = (StyblinskiTangIndividual) e;
                         System.out.print("[");
                         for (int j = 0; j < individual.getGenes().length; j++) {
                             System.out.printf("%.2f ", individual.getGenes()[j]);
                         }
-                        
+
                         System.out.printf("%s %s %.3f", "]", "Fitness", individual.getFitness());
                         System.out.println();
-                    }
-
-            );
+                    });
 
             List<Individual> initialPopulationAux = new ArrayList<>(nPopulation);
             initialPopulationAux.addAll(initialPopulation);
@@ -68,41 +65,43 @@ public class GeneticAlgorithm {
 
             int remainPopulation = nPopulation - nElite;
             remainPopulation = Math.min(remainPopulation, join.size());
-            double sumFitness = 0;
-
+            double bestFitness = join.stream().mapToDouble(Individual::getFitness).min().orElse(0);
             double worstFitness = join.stream().mapToDouble(Individual::getFitness).max().orElse(0);
 
+            double offset = 0;
+            if (bestFitness < 0) {
+                offset = -bestFitness;
+            }
+
+            double sumFitness = 0;
             for (Individual individual : join) {
-                sumFitness += (worstFitness - individual.getFitness());
+                sumFitness += (worstFitness + offset - (individual.getFitness() + offset));
             }
 
             for (int r = 0; r < remainPopulation; r++) {
-                double spin = random.nextDouble(sumFitness);
+                double spin = random.nextDouble() * sumFitness;
                 double cumulativeSum = 0;
 
                 Iterator<Individual> iterator = join.iterator();
                 while (iterator.hasNext()) {
                     Individual individual = iterator.next();
-                    cumulativeSum += (worstFitness - individual.getFitness());
+                    double fitnessValue = worstFitness + offset - (individual.getFitness() + offset);
+                    cumulativeSum += fitnessValue;
 
                     if (spin <= cumulativeSum) {
                         newPopulation.add(individual);
-                        sumFitness -= (worstFitness - individual.getFitness());
+                        sumFitness -= fitnessValue;
                         iterator.remove();
                         break;
                     }
                 }
             }
-
             initialPopulation = newPopulation;
-
-            StyblinskiTangIndividual bestIndividual = (StyblinskiTangIndividual) initialPopulation.get(0);
+            var bestIndividual = initialPopulation.get(0);
             double valueActual = bestIndividual.getFitness();
-            
-            final double TOLERANCE = 0.4;
-            
-            if (valueActual <= targetFitness || Math.abs(valueActual - targetFitness) < TOLERANCE) {
-                
+
+            if (valueActual <= targetFitness || Math.abs(valueActual - targetFitness) < tolerance) {
+
                 System.out.println("\nSolução encontrada");
                 System.out.print("Geração: " + generation + ". Valores: ");
                 System.out.print("[ ");

@@ -8,4 +8,5 @@ public interface Individual {
 
     public double getFitness();
 
+    public double[] getGenes();
 }

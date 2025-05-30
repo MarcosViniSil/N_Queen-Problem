@@ -2,15 +2,14 @@ import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
 
-public class StyblinskiTangIndividual implements Individual {
-
+public class DixonPriceIndividual implements Individual {
     private double genes[];
     private int dimension;
-    private final double LOWER_BOUND = -5.0;
-    private final double UPPER_BOUND = 5.0;
+    private final double LOWER_BOUND = -10.0;
+    private final double UPPER_BOUND = 10.0;
     private final double ALPHA = 0.3;
 
-    public StyblinskiTangIndividual(int dimension) {
+    public DixonPriceIndividual(int dimension) {
         this.dimension = dimension;
         this.genes = new double[dimension];
         this.randomizeGenes();
@@ -25,7 +24,7 @@ public class StyblinskiTangIndividual implements Individual {
 
     @Override
     public List<Individual> crossover(Individual other) {
-        StyblinskiTangIndividual parent2 = (StyblinskiTangIndividual) other;
+        DixonPriceIndividual parent2 = (DixonPriceIndividual) other;
         Random rand = new Random();
 
         double[] childGenes = new double[dimension];
@@ -43,7 +42,7 @@ public class StyblinskiTangIndividual implements Individual {
             childGenes[i] = Math.max(LOWER_BOUND, Math.min(UPPER_BOUND, lower + (upper - lower) * rand.nextDouble()));
         }
 
-        StyblinskiTangIndividual child = new StyblinskiTangIndividual(dimension);
+        DixonPriceIndividual child = new DixonPriceIndividual(dimension);
         child.setGenes(childGenes);
 
         List<Individual> offspring = new ArrayList<>();
@@ -53,8 +52,8 @@ public class StyblinskiTangIndividual implements Individual {
 
     @Override
     public Individual mutate() {
-    final double MUTATION_RATE = 0.2; 
-    final double MUTATION_STDDEV = 0.1 * (UPPER_BOUND - LOWER_BOUND); 
+        final double MUTATION_RATE = 0.2;
+        final double MUTATION_STDDEV = 0.1 * (UPPER_BOUND - LOWER_BOUND);
 
         Random rand = new Random();
         double[] mutatedGenes = genes.clone();
@@ -67,23 +66,27 @@ public class StyblinskiTangIndividual implements Individual {
             }
         }
 
-        StyblinskiTangIndividual mutant = new StyblinskiTangIndividual(dimension);
+        DixonPriceIndividual mutant = new DixonPriceIndividual(dimension);
         mutant.setGenes(mutatedGenes);
         return mutant;
     }
 
     @Override
     public double getFitness() {
-        return StyblinskiTangIndividual.styblinskiTang(genes);
+        return this.fitness(this.genes);
     }
 
-    public static double styblinskiTang(double[] x) {
-        double sum = 0.0;
-        for (double xi : x) {
-            sum += Math.pow(xi, 4) - 16 * Math.pow(xi, 2) + 5 * xi;
+    public double fitness(double[] x) {
+        if (this.dimension <= 0) {
+            return 0.0;
         }
-        return 0.5 * sum;
+        double sum = Math.pow(x[0] - 1, 2);
+        for (int i = 1; i < this.genes.length; i++) {
+            sum += (i + 1) * Math.pow(2 * this.genes[i] * this.genes[i] - this.genes[i - 1], 2);
+        }
+        return sum;
     }
+
     @Override
     public double[] getGenes() {
         return genes;
