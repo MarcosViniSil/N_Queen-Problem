@@ -1,12 +1,12 @@
 public class App {
     public static void main(String[] args) throws Exception {
         
-        final int N_POPULATION = 70;      
+        final int N_POPULATION = 100;      
         final int N_ELITE = 1;              
         final int N_GENERATION = 2000;    
         final int N_DIMENSION = 4;          
 
-        final double valueExpectedStyblinski = (-39.16599 * N_DIMENSION);
+        final double valueExpectedStyblinski = (-39.16 * N_DIMENSION);
         
         StyblinskiTangIndividualFactory styblinski = new StyblinskiTangIndividualFactory(N_DIMENSION);
         DixonPriceIndividualFactory dixon = new DixonPriceIndividualFactory(N_DIMENSION);
@@ -14,7 +14,7 @@ public class App {
         
         //GeneticAlgorithm.execute(N_POPULATION,N_ELITE,styblinski,N_GENERATION,valueExpectedStyblinski,0.4);
         //GeneticAlgorithm.execute(N_POPULATION,N_ELITE,dixon,N_GENERATION,0,0.06);
-        //GeneticAlgorithm.execute(N_POPULATION,N_ELITE,langermann,N_GENERATION,0.5,0);//Langermann
+        GeneticAlgorithm.execute(N_POPULATION,N_ELITE,langermann,N_GENERATION,-4.1,0.01);
 
         
     }

@@ -24,7 +24,7 @@ public class GeneticAlgorithm {
                             System.out.printf("%.2f ", individual.getGenes()[j]);
                         }
 
-                        System.out.printf("%s %s %.3f", "]", "Fitness", individual.getFitness());
+                        System.out.printf("%s %s %.2f", "]", "Fitness", individual.getFitness());
                         System.out.println();
                     });
 
@@ -108,7 +108,7 @@ public class GeneticAlgorithm {
                 for (int j = 0; j < bestIndividual.getGenes().length; j++) {
                     System.out.printf("%.2f ", bestIndividual.getGenes()[j]);
                 }
-                System.out.printf("%s %s %.3f", "]", "Fitness", bestIndividual.getFitness());
+                System.out.printf("%s %s %.2f", "]", "Fitness", bestIndividual.getFitness());
                 System.out.println();
                 return initialPopulation.get(0);
             }
